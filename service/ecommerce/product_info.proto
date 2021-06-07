@@ -1,0 +1,22 @@
+//protoc -I $GOPATH/src/productinfo/service/ecommerce $GOPATH/src/productinfo/service/ecommerce/product_info.proto --go_out=plugins=grpc:$GOPATH/src/productinfo/service/ecommerce
+syntax = "proto3";
+
+package ecommerce;
+
+option go_package = "./";
+
+service ProductInfo {
+  rpc addProduct(Product) returns (ProductID);
+  rpc getProduct(ProductID) returns (Product);
+}
+
+message Product {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  float price = 4;
+}
+
+message ProductID {
+  string value = 1;
+}
