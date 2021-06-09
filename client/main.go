@@ -4,7 +4,7 @@ import (
 	"context"
 	"google.golang.org/grpc"
 	"log"
-	pb "productinfo/service/ecommerce"
+	pb "productinfo/client/ecommerce"
 	"time"
 )
 
