@@ -8,12 +8,12 @@ import (
 	pb "productinfo/service/ecommerce"
 )
 
-// Server used to for realisation ecommerce/product_info
+// server is used to implement ecommerce/product_info.
 type server struct {
 	productMap map[string]*pb.Product
 }
 
-// AddProduct realise ecommerce.AddProduct
+// AddProduct implements ecommerce.AddProduct
 func (s *server) AddProduct(ctx context.Context, in *pb.Product) (*pb.ProductID, error) {
 	out, err := uuid.NewV4()
 	if err != nil {
@@ -28,7 +28,7 @@ func (s *server) AddProduct(ctx context.Context, in *pb.Product) (*pb.ProductID,
 	return &pb.ProductID{Value: in.Id}, status.New(codes.OK, "").Err()
 }
 
-// GetProduct realise ecommerce.GetProduct
+// GetProduct implements ecommerce.GetProduct
 func (s *server) GetProduct(ctx context.Context, in *pb.ProductID) (*pb.Product, error) {
 	value, exists := s.productMap[in.Value]
 	if exists {
