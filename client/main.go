@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/grpc"
 	"log"
 	pb "productinfo/client/ecommerce"
@@ -24,22 +23,6 @@ func main() {
 	c := pb.NewOrderManagementClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
-
-	// Add Order
-	order1 := pb.Order{
-		Id: "101",
-		Items:	[]string{"iPhone XS", "MacBook Pro"},
-		Price: 2300.00,
-		Description: "San Jose, CA",
-	}
-	res, _ := c.AddOrder(ctx, &order1)
-	if res != nil {
-		log.Print("AddOrder Response -> ", res.Value)
-	}
-
-	// Get Order
-	retrievedOrder, err := c.GetOrder(ctx, &wrappers.StringValue{Value: "106"})
-	log.Print("GetOrder Response -> : ", retrievedOrder)
 
 	// // Add Product
 	//name := "Apple iPhone 11"
@@ -66,4 +49,21 @@ func main() {
 	//	log.Fatalf("Could not get product: %v", err)
 	//}
 	//log.Printf("Product: %v", product.String())
+
+	// // Get Order
+	//retrievedOrder, err := c.GetOrder(ctx, &wrappers.StringValue{Value: "106"})
+	//log.Print("GetOrder Response -> : ", retrievedOrder)
+
+	// Add Order
+	order1 := pb.Order{
+		Id: "101",
+		Items:	[]string{"iPhone XS", "MacBook Pro"},
+		Price: 2300.00,
+		Description: "San Jose, CA",
+	}
+	res, _ := c.AddOrder(ctx, &order1)
+	if res != nil {
+		log.Print("AddOrder Response -> ", res.Value)
+	}
+
 }

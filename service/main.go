@@ -61,6 +61,16 @@ func (s *server) GetOrder(ctx context.Context, orderId *wrappers.StringValue) (*
 	return &ord, status.New(codes.OK, "").Err()
 }
 
+// AddOrder service implementation.
+func (s *server) AddOrder(ctx context.Context, orderReq *pb.Order) (*wrappers.StringValue, error) {
+	log.Printf("Order Added. ID : %v", orderReq.Id)
+
+	// Service Implementation
+	orderMap[orderReq.Id] = *orderReq
+
+	return &wrappers.StringValue{Value: "Order Added: " + orderReq.Id}, nil
+}
+
 func main() {
 	initSampleData()
 
