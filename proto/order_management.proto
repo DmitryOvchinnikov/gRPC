@@ -12,7 +12,8 @@ package ecommerce;
 option go_package = "./";
 
 service OrderManagement {
-  rpc getOrder(google.protobuf.StringValue ) returns (Order);
+  rpc addOrder(Order) returns (google.protobuf.StringValue);
+  rpc getOrder(google.protobuf.StringValue) returns (Order);
 }
 
 message Order {
