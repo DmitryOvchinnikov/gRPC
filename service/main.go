@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"io"
 	"log"
 	"net"
 	pb "productinfo/service/ecommerce"
@@ -14,6 +15,7 @@ import (
 
 const (
 	port = ":50051"
+	orderBatchSize = 3
 )
 
 var orderMap = make(map[string]pb.Order)
@@ -69,6 +71,71 @@ func (s *server) AddOrder(ctx context.Context, orderReq *pb.Order) (*wrappers.St
 	orderMap[orderReq.Id] = *orderReq
 
 	return &wrappers.StringValue{Value: "Order Added: " + orderReq.Id}, nil
+}
+
+// ProcessOrders is bi-directional Streaming RPC.
+func (s *server) ProcessOrders(stream pb.OrderManagement_ProcessOrdersServer) error {
+
+	batchMarker := 1
+	var combinedShipmentMap = make(map[string]pb.CombinedShipment)
+	for {
+		orderId, err := stream.Recv()
+		log.Printf("Reading Proc order : %s", orderId)
+		if err == io.EOF {
+
+			// Client has sent all the messages.
+			// Send remaining shipments.
+			log.Printf("EOF : %s", orderId)
+			for _, shipment := range combinedShipmentMap {
+				if err := stream.Send(&shipment); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		}
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+
+		// Logic to organize orders into shipments,
+		// based on the destination.
+		destination := orderMap[orderId.GetValue()].Destination
+		shipment, found := combinedShipmentMap[destination]
+
+		if found {
+			ord := orderMap[orderId.GetValue()]
+			shipment.OrdersList = append(shipment.OrdersList, &ord)
+			combinedShipmentMap[destination] = shipment
+		} else {
+			comShip := pb.CombinedShipment{
+				Id: "cmb - " + (orderMap[orderId.GetValue()].Destination),
+				Status: "Processed!",
+			}
+			ord := orderMap[orderId.GetValue()]
+			comShip.OrdersList = append(shipment.OrdersList, &ord)
+			combinedShipmentMap[destination] = comShip
+			log.Print(len(comShip.OrdersList), comShip.GetId())
+		}
+
+		if batchMarker == orderBatchSize {
+
+			// Stream combined orders to the client in batches.
+			for _, comb := range combinedShipmentMap {
+				log.Printf("Shipping : %v -> %v" , comb.Id, len(comb.OrdersList))
+
+				// Send combined shipment to the client.
+				if err := stream.Send(&comb); err != nil {
+					return err
+				}
+			}
+			batchMarker = 0
+			combinedShipmentMap = make(map[string]pb.CombinedShipment)
+		} else {
+			batchMarker++
+		}
+	}
 }
 
 func main() {
